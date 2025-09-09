@@ -1,7 +1,6 @@
 use nom::{
     Finish, IResult, Parser as _,
     bytes::complete::{is_not, tag, take_until, take_while1},
-    character::char,
     combinator::opt,
     multi::{many1, separated_list1},
     sequence::{delimited, preceded, terminated},
@@ -11,6 +10,7 @@ use nom::{
 pub struct Brex<'a> {
     pub preamble: &'a str,
     pub groups: Vec<Group<'a>>,
+    pub postamble: Option<&'a str>,
 }
 
 impl<'a> Brex<'a> {
@@ -18,6 +18,7 @@ impl<'a> Brex<'a> {
         Self {
             preamble,
             groups: vec![],
+            postamble: None,
         }
     }
     pub fn unroll(&self) -> String {
@@ -27,7 +28,10 @@ impl<'a> Brex<'a> {
             .flat_map(|group| group.unroll())
             .collect::<Vec<_>>();
         groups.sort_unstable();
-        format!("{}{}", self.preamble, groups.join(""))
+        match self.postamble {
+            Some(post) => format!("{}{}{post}", self.preamble, groups.join("")),
+            None => format!("{}{}", self.preamble, groups.join("")),
+        }
     }
 }
 
@@ -122,9 +126,6 @@ impl TryFrom<(&str, Option<&str>)> for Numeric {
 
 impl<'a> Brex<'a> {
     pub fn parse(input: &'a str) -> IResult<&'a str, Self> {
-        let input = input.strip_suffix(".bin").unwrap_or(input);
-        let preamble = terminated(take_until("<"), char('<'));
-
         let range = delimited(
             tag("{"),
             separated_list1(
@@ -155,8 +156,24 @@ impl<'a> Brex<'a> {
             .map(|(prefix, suffixes)| Group { prefix, suffixes });
         let groups = many1(group);
 
-        let (input, (preamble, groups)) = (preamble, groups).parse(input)?;
+        let preamble = is_not("<");
+        let (input, (preamble, groups)): (_, (_, Option<_>)) =
+            (preamble, opt(delimited(tag("<"), groups, tag(">")))).parse(input)?;
 
-        Ok((input, Brex { preamble, groups }))
+        eprintln!("{input:?}");
+        eprintln!("{preamble:?}");
+        eprintln!("{groups:?}");
+
+        Ok((
+            input,
+            Brex {
+                preamble,
+                postamble: match input.is_empty() {
+                    true => None,
+                    false => Some(input),
+                },
+                groups: groups.unwrap_or_default(),
+            },
+        ))
     }
 }

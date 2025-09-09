@@ -16,9 +16,6 @@ mod roundtrip {
             let decoded = Brex::parse(&encoded).unwrap().1;
             let decoded = decoded.unroll();
 
-            let line = line
-                .strip_suffix(".bin")
-                .expect(".bin to exist in input data");
             assert_eq!(line, decoded)
         }
     }

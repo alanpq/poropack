@@ -23,9 +23,15 @@ impl fmt::Display for Numeric {
         }
     }
 }
+
 impl fmt::Display for Brex<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.write_str(self.preamble)?;
+        let Self {
+            preamble,
+            groups,
+            postamble,
+        } = self;
+        f.write_str(preamble)?;
 
         if self.groups.is_empty() {
             return Ok(());
@@ -34,13 +40,20 @@ impl fmt::Display for Brex<'_> {
         f.write_char('<')?;
 
         let mut groups = self.groups.clone();
-        //groups.sort_unstable_by(|a, b| a.prefix.cmp(b.prefix));
+        fn new_sort(a: &str, b: &str) -> std::cmp::Ordering {
+            let len = a.len().min(b.len());
+            match &a[..len].cmp(&b[..len]) {
+                std::cmp::Ordering::Equal => a.len().cmp(&b.len()),
+                order => *order,
+            }
+        }
+        groups.sort_unstable_by(|a, b| new_sort(a.prefix, b.prefix));
 
         for Group { prefix, suffixes } in groups {
             f.write_str(prefix)?;
             f.write_char('{')?;
             let mut suffixes = suffixes.clone();
-            //suffixes.sort_unstable_by(|a, b| a.suffix.cmp(b.suffix));
+            suffixes.sort_unstable_by(|a, b| new_sort(a.suffix, b.suffix));
             for (i, Suffix { suffix, numerics }) in suffixes.iter().enumerate() {
                 f.write_str(suffix)?;
                 if let Some(numerics) = numerics {
@@ -60,13 +73,19 @@ impl fmt::Display for Brex<'_> {
             f.write_char('}')?;
         }
         f.write_char('>')?;
+        if let Some(postamble) = postamble {
+            f.write_str(postamble)?;
+        }
 
         Ok(())
     }
 }
 
 pub fn encode<'a>(raw: &'a str) -> Result<Brex<'a>> {
-    let line = raw.strip_suffix(".bin").unwrap_or(raw.as_ref());
+    let (line, postamble) = raw
+        .rsplit_once(".")
+        .map(|(l, r)| (l, Some(&raw[raw.len() - (r.len() + 1)..])))
+        .unwrap_or((raw, None));
     let mut parts = split_inclusive_start(line, '_');
 
     let mut a = Vec::<(&str, usize)>::new();
@@ -107,7 +126,7 @@ pub fn encode<'a>(raw: &'a str) -> Result<Brex<'a>> {
 
     let Some(best_set_skip) = best_set.iter().position(|(_, count)| *count > 1) else {
         // if there's no duplicates in the best set, there's no point encoding any groups
-        return Ok(Brex::empty(line));
+        return Ok(Brex::empty(raw));
     };
     let preamble = offset + (2 * best_set_skip);
     let preamble = (&mut parts)
@@ -193,7 +212,11 @@ pub fn encode<'a>(raw: &'a str) -> Result<Brex<'a>> {
         })
         .collect_vec();
 
-    Ok(Brex { preamble, groups })
+    Ok(Brex {
+        preamble,
+        groups,
+        postamble,
+    })
 }
 //write!(
 //    result,
