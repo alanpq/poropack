@@ -1,10 +1,7 @@
 mod roundtrip {
     use test_each_file::test_each_file;
 
-    use crate::{
-        decode::{self, Brex},
-        encode::encode,
-    };
+    use crate::{decode, encode};
 
     test_each_file!( in "./brex/cases/"  => roundtrip);
 
@@ -13,8 +10,7 @@ mod roundtrip {
             println!("== {line:?}");
             let encoded = encode(line).unwrap().to_string();
             println!("-> {encoded:?}");
-            let decoded = Brex::parse(&encoded).unwrap().1;
-            let decoded = decoded.unroll();
+            let decoded = decode(&encoded).unwrap();
 
             assert_eq!(line, decoded)
         }

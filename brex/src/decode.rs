@@ -9,7 +9,7 @@ use nom::{
 
 #[derive(Debug, Clone)]
 pub struct Brex<'a> {
-    pub preamble: &'a str,
+    pub preamble: Option<&'a str>,
     pub groups: Vec<Group<'a>>,
     pub postamble: Option<&'a str>,
 }
@@ -28,7 +28,7 @@ fn inverted_substr_sort(a: &str, b: &str) -> std::cmp::Ordering {
 impl<'a> Brex<'a> {
     pub fn empty(preamble: &'a str) -> Self {
         Self {
-            preamble,
+            preamble: Some(preamble),
             groups: vec![],
             postamble: None,
         }
@@ -40,9 +40,11 @@ impl<'a> Brex<'a> {
             .sorted_unstable_by(|a, b| inverted_substr_sort(a.prefix, b.prefix))
             .flat_map(|group| group.unroll())
             .collect::<Vec<_>>();
-        match self.postamble {
-            Some(post) => format!("{}{}{post}", self.preamble, groups.join("")),
-            None => format!("{}{}", self.preamble, groups.join("")),
+        match (self.preamble, self.postamble) {
+            (Some(pre), Some(post)) => format!("{pre}{}{post}", groups.join("")),
+            (Some(pre), None) => format!("{pre}{}", groups.join("")),
+            (None, Some(post)) => format!("{}{post}", groups.join("")),
+            (None, None) => groups.join(""),
         }
     }
 }
@@ -130,7 +132,7 @@ impl Numeric {
 impl TryFrom<(&str, Option<&str>)> for Numeric {
     type Error = std::num::ParseIntError;
 
-    fn try_from(value: (&str, Option<&str>)) -> Result<Self, Self::Error> {
+    fn try_from(value: (&str, Option<&str>)) -> std::result::Result<Self, Self::Error> {
         match value {
             (start, Some(end)) => Ok(Self::Range(start.parse()?, end.parse()?)),
             (start, None) => Ok(Self::Single(start.parse()?)),
@@ -138,8 +140,18 @@ impl TryFrom<(&str, Option<&str>)> for Numeric {
     }
 }
 
+#[derive(thiserror::Error, Debug)]
+enum ParseError {
+    #[error(transparent)]
+    ParseNumberError(#[from] std::num::ParseIntError),
+    #[error(transparent)]
+    NomError(#[from] nom::error::Error<String>),
+}
+
+type Result<T> = std::result::Result<T, nom::error::Error<String>>;
+
 impl<'a> Brex<'a> {
-    pub fn parse(input: &'a str) -> IResult<&'a str, Self> {
+    pub fn parse(input: &'a str) -> Result<Self> {
         let range = delimited(
             tag("{"),
             separated_list1(
@@ -170,24 +182,28 @@ impl<'a> Brex<'a> {
             .map(|(prefix, suffixes)| Group { prefix, suffixes });
         let groups = many1(group);
 
-        let preamble = is_not("<");
+        let preamble = opt(is_not("<"));
         let (input, (preamble, groups)): (_, (_, Option<_>)) =
-            (preamble, opt(delimited(tag("<"), groups, tag(">")))).parse(input)?;
+            (preamble, opt(delimited(tag("<"), groups, tag(">"))))
+                .parse(input)
+                .finish()
+                .map_err(|err: nom::error::Error<&str>| err.to_owned())?;
 
-        eprintln!("{input:?}");
-        eprintln!("{preamble:?}");
-        eprintln!("{groups:?}");
+        // eprintln!("{input:?}");
+        // eprintln!("{preamble:?}");
+        // eprintln!("{groups:?}");
 
-        Ok((
-            input,
-            Brex {
-                preamble,
-                postamble: match input.is_empty() {
-                    true => None,
-                    false => Some(input),
-                },
-                groups: groups.unwrap_or_default(),
+        Ok(Brex {
+            preamble,
+            postamble: match input.is_empty() {
+                true => None,
+                false => Some(input),
             },
-        ))
+            groups: groups.unwrap_or_default(),
+        })
     }
+}
+
+pub fn decode(encoded: &str) -> Result<String> {
+    Ok(Brex::parse(encoded)?.unroll())
 }

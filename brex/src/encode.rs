@@ -31,7 +31,9 @@ impl fmt::Display for Brex<'_> {
             groups,
             postamble,
         } = self;
-        f.write_str(preamble)?;
+        if let Some(preamble) = preamble {
+            f.write_str(preamble)?;
+        }
 
         if groups.is_empty() {
             return Ok(());
@@ -200,7 +202,10 @@ pub fn encode<'a>(raw: &'a str) -> Result<Brex<'a>> {
         .collect_vec();
 
     Ok(Brex {
-        preamble,
+        preamble: match preamble.is_empty() {
+            true => None,
+            false => Some(preamble),
+        },
         groups,
         postamble,
     })
