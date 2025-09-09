@@ -11,6 +11,8 @@ pub fn inverted_substr_sort(a: &str, b: &str) -> std::cmp::Ordering {
 }
 
 #[derive(Clone, Debug)]
+/// An iterator over substrings separated by a given deliminator character. The deliminator is included at the start of each substring
+/// This struct is created by the [`split_inclusive_start`] function.
 pub struct SplitInclusiveStart<'a> {
     remainder: &'a str,
     delim: char,
@@ -57,6 +59,7 @@ impl<'a> Iterator for SplitInclusiveStart<'a> {
     }
 }
 
+/// Return an iterator over substrings separated by a given deliminator character. The deliminator is included at the start of each substring
 pub fn split_inclusive_start<'a>(s: &'a str, delim: char) -> SplitInclusiveStart<'a> {
     SplitInclusiveStart::new(s, delim)
 }

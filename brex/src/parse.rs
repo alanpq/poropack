@@ -1,3 +1,7 @@
+//! Parsing brex strings
+//!
+//! See [`Brex::parse()`]
+
 use nom::{
     Finish, Parser as _,
     bytes::complete::{is_not, tag, take_until, take_while1},
@@ -8,18 +12,20 @@ use nom::{
 
 use crate::{Brex, Group, Numeric, Suffix};
 
+/// Error parsing a brex string
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
     #[error(transparent)]
+    /// Error parsing a numeric suffix
     ParseNumberError(#[from] std::num::ParseIntError),
     #[error(transparent)]
+    /// Underlying parser error
     NomError(#[from] nom::error::Error<String>),
 }
 
-pub type Result<T> = std::result::Result<T, nom::error::Error<String>>;
-
 impl<'a> Brex<'a> {
-    pub fn parse(input: &'a str) -> Result<Self> {
+    /// Parse a brex string.
+    pub fn parse(input: &'a str) -> Result<Self, Error> {
         let range = delimited(
             tag("{"),
             separated_list1(
@@ -55,7 +61,7 @@ impl<'a> Brex<'a> {
             (preamble, opt(delimited(tag("<"), groups, tag(">"))))
                 .parse(input)
                 .finish()
-                .map_err(|err: nom::error::Error<&str>| err.to_owned())?;
+                .map_err(|err: nom::error::Error<&str>| err.cloned())?;
 
         // eprintln!("{input:?}");
         // eprintln!("{preamble:?}");

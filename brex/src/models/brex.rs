@@ -4,14 +4,21 @@ use std::fmt::Write as _;
 use crate::{Group, Suffix};
 
 #[derive(Debug, Clone)]
+/// IR of a brex string.
+///
+/// Created via [`Brex::encode()`] or [`Brex::parse()`].
+/// To expand out to plaintext, see [`Brex::expand()`].
 pub struct Brex<'a> {
+    /// Plaintext before the `<`
     pub preamble: Option<&'a str>,
+    /// The groups within the `<>` pair
     pub groups: Vec<Group<'a>>,
+    /// Plaintext after the `>`
     pub postamble: Option<&'a str>,
 }
 
 impl<'a> Brex<'a> {
-    pub fn empty(preamble: &'a str) -> Self {
+    pub(crate) fn empty(preamble: &'a str) -> Self {
         Self {
             preamble: Some(preamble),
             groups: vec![],

@@ -3,6 +3,9 @@ use itertools::Itertools;
 use crate::{Brex, Group, Suffix, util::inverted_substr_sort};
 
 impl<'a> Brex<'a> {
+    /// Expand this brex to plaintext.
+    ///
+    /// See [`crate::decode()`] for a convenience wrapper that both parses & expands a brex string.
     pub fn expand(&self) -> String {
         let groups = self
             .groups
@@ -19,7 +22,7 @@ impl<'a> Brex<'a> {
     }
 }
 impl<'a> Group<'a> {
-    pub fn expand(&self) -> impl Iterator<Item = String> {
+    fn expand(&self) -> impl Iterator<Item = String> {
         self.suffixes
             .iter()
             //.sorted_by(|a, b| new_sort(a.suffix, b.suffix))
@@ -29,7 +32,7 @@ impl<'a> Group<'a> {
 }
 
 impl<'a> Suffix<'a> {
-    pub fn expand(&self) -> Vec<String> {
+    fn expand(&self) -> Vec<String> {
         match &self.numerics {
             Some(numerics) => numerics
                 .iter()

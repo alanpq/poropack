@@ -1,3 +1,7 @@
+//! Encoding brex strings
+//!
+//! See [`Brex::encode()`] and [`crate::encode()`]
+
 use std::collections::{BTreeSet, HashMap};
 
 use itertools::Itertools;
@@ -5,15 +9,18 @@ use itertools::Itertools;
 use crate::{Brex, Group, Numeric, Suffix, util::split_inclusive_start};
 
 #[derive(thiserror::Error, Debug)]
+/// Error encoding a brex string
 pub enum Error {
     #[error("Error formatting encoded string - {0}")]
+    /// Error formatting the encoded string
     FmtError(#[from] std::fmt::Error),
 }
 
-pub type Result<T> = std::result::Result<T, Error>;
-
 impl<'a> Brex<'a> {
-    pub fn encode(input: &'a str) -> Result<Self> {
+    /// Try to encode a string as brex. Not guaranteed to be the minimal possible representation.
+    ///
+    /// See [`crate::encode()`] for a convenience wrapper that encodes directly to a [`String`].
+    pub fn encode(input: &'a str) -> Result<Self, Error> {
         let (line, postamble) = input
             .rsplit_once(".")
             .map(|(l, r)| (l, Some(&input[input.len() - (r.len() + 1)..])))
