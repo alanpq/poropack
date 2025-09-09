@@ -27,6 +27,10 @@ impl fmt::Display for Brex<'_> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.preamble)?;
 
+        if self.groups.is_empty() {
+            return Ok(());
+        }
+
         f.write_char('<')?;
 
         let mut groups = self.groups.clone();
@@ -101,11 +105,10 @@ pub fn encode<'a>(raw: &'a str) -> Result<Brex<'a>> {
 
     //eprintln!("\nbest set: {best_set:?}");
 
-    let best_set_skip = best_set
-        .iter()
-        .position(|(_, count)| *count > 1)
-        .expect("at least one doubled prefix"); // TODO: properly handle no dupes
-
+    let Some(best_set_skip) = best_set.iter().position(|(_, count)| *count > 1) else {
+        // if there's no duplicates in the best set, there's no point encoding any groups
+        return Ok(Brex::empty(line));
+    };
     let preamble = offset + (2 * best_set_skip);
     let preamble = (&mut parts)
         .take(preamble)

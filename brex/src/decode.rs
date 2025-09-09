@@ -14,6 +14,12 @@ pub struct Brex<'a> {
 }
 
 impl<'a> Brex<'a> {
+    pub fn empty(preamble: &'a str) -> Self {
+        Self {
+            preamble,
+            groups: vec![],
+        }
+    }
     pub fn unroll(&self) -> String {
         let mut groups = self
             .groups
