@@ -43,16 +43,16 @@ impl<H: Hasher> From<BTreeMap<H::Output, String>> for Hashtable<H> {
     }
 }
 
-impl<H: Hasher> From<Hashtable<H>> for trie_rs::Trie<u8> {
-    fn from(value: Hashtable<H>) -> Self {
-        trie_rs::Trie::from_iter(value.hashes.into_values())
-    }
-}
-impl<H: Hasher> From<Hashtable<H>> for trie_rs::map::TrieSet<u8> {
-    fn from(value: Hashtable<H>) -> Self {
-        trie_rs::map::TrieSet::from_iter(value.hashes.into_values())
-    }
-}
+// impl<H: Hasher> From<Hashtable<H>> for trie_rs::Trie<u8> {
+//     fn from(value: Hashtable<H>) -> Self {
+//         trie_rs::Trie::from_iter(value.hashes.into_values())
+//     }
+// }
+// impl<H: Hasher> From<Hashtable<H>> for trie_rs::map::TrieSet<u8> {
+//     fn from(value: Hashtable<H>) -> Self {
+//         trie_rs::map::TrieSet::from_iter(value.hashes.into_values())
+//     }
+// }
 
 impl<H: Hasher> TryFrom<fst::Set<Vec<u8>>> for Hashtable<H> {
     fn try_from(value: fst::Set<Vec<u8>>) -> Result<Self, Self::Error> {
