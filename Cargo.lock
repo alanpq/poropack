@@ -165,6 +165,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "clap-stdin"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ce9eaafece93d07ba62941de901e54d8df03800b7d775000d0d8cd5f876a592d"
+dependencies = [
+ "clap",
+ "thiserror",
+]
+
+[[package]]
 name = "clap_builder"
 version = "4.5.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -499,7 +509,9 @@ name = "poropack"
 version = "0.1.0"
 dependencies = [
  "bincode",
+ "brex",
  "clap",
+ "clap-stdin",
  "miette",
  "nom",
  "poro_hash",

@@ -4,13 +4,16 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+poro_hash = { version = "0.1.0", path = "../hash" }
+brex = {version = "0.1.0", path = "../brex" }
+
 bincode = { version = "2.0.1", features = ["serde"] }
 clap = { version = "4.5.47", features = ["derive"] }
-poro_hash = { version = "0.1.0", path = "../hash" }
 miette = { version = "7.6.0", features = ["fancy"] }
 postcard = { version = "1.1.3", features = ["use-std"] }
 serde = "1.0.219"
 serde_json = "1.0.143"
+clap-stdin = { version = "0.7.0", features = ["clap"] }
 
 [dev-dependencies]
 nom = "8.0.0"
