@@ -57,7 +57,14 @@ fn main() -> miette::Result<()> {
                     println!("{encoded}");
                 }
             }
-            BrexCommand::Decode { input, output } => todo!(),
+            BrexCommand::Decode { input, output } => {
+                let mut lines = BufReader::new(input.into_reader().into_diagnostic()?).lines();
+                while let Some(Ok(line)) = lines.next() {
+                    eprintln!("{line}");
+                    let encoded = brex::decode(line.trim()).into_diagnostic()?;
+                    println!("{encoded}");
+                }
+            }
         },
         Commands::Hash(command) => match command {
             HashCommand::Compress { input, output } => {
