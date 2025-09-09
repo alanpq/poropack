@@ -1,7 +1,7 @@
 use std::{
     collections::BTreeMap,
     fs::File,
-    io::{BufRead as _, BufReader, BufWriter, Read, Write, stdin},
+    io::{BufRead as _, BufReader, BufWriter, Read, Write, stdin, stdout},
     path::PathBuf,
 };
 
@@ -44,25 +44,37 @@ pub enum BrexCommand {
     },
 }
 
+fn output_or_stdout(path: Option<PathBuf>) -> Result<Box<dyn std::io::Write>, std::io::Error> {
+    path.map(|path| {
+        File::create(path)
+            .map(BufWriter::new)
+            .map(Box::new)
+            .map(|w| w as Box<dyn Write>)
+    })
+    .unwrap_or_else(|| Ok(Box::new(stdout())))
+}
+
 fn main() -> miette::Result<()> {
     let args = Cli::parse();
 
     match args.command {
         Commands::Brex(command) => match command {
             BrexCommand::Encode { input, output } => {
+                let mut output = output_or_stdout(output).into_diagnostic()?;
                 let mut lines = BufReader::new(input.into_reader().into_diagnostic()?).lines();
                 while let Some(Ok(line)) = lines.next() {
                     eprintln!("{line}");
                     let encoded = brex::encode(line.trim()).into_diagnostic()?;
-                    println!("{encoded}");
+                    writeln!(output, "{encoded}").into_diagnostic()?;
                 }
             }
             BrexCommand::Decode { input, output } => {
+                let mut output = output_or_stdout(output).into_diagnostic()?;
                 let mut lines = BufReader::new(input.into_reader().into_diagnostic()?).lines();
                 while let Some(Ok(line)) = lines.next() {
                     eprintln!("{line}");
                     let encoded = brex::decode(line.trim()).into_diagnostic()?;
-                    println!("{encoded}");
+                    writeln!(output, "{encoded}").into_diagnostic()?;
                 }
             }
         },
