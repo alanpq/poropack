@@ -1,0 +1,12 @@
+[package]
+name = "hashtools"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+fnv_rs = "0.4.4"
+fst = "0.4.7"
+qp-trie = { version = "0.8.2", features = ["serde"] }
+serde = { version = "1.0.219", features = ["derive"] }
+trie-rs = { git = "https://github.com/alanpq/trie-rs", features = ["rayon", "serde"] }
+xxhash-rust = { version = "0.8.15", features = ["std", "xxh64"] }
