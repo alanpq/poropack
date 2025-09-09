@@ -8,7 +8,7 @@ mod roundtrip {
     fn roundtrip(input: &str) {
         for line in input.lines() {
             println!("== {line:?}");
-            let encoded = encode(line).unwrap().to_string();
+            let encoded = encode(line).unwrap();
             println!("-> {encoded:?}");
             let decoded = decode(&encoded).unwrap();
 
