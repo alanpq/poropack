@@ -6,6 +6,7 @@ mod decode;
 mod models;
 mod util;
 
+pub mod alphabet;
 pub mod encode;
 pub mod parse;
 

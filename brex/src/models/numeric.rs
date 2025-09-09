@@ -1,5 +1,7 @@
 use core::fmt;
 
+use crate::alphabet::NUMERIC_RANGE_DELIM;
+
 /// A number/range of numbers
 #[derive(Debug, Clone, Copy)]
 pub enum Numeric {
@@ -44,7 +46,7 @@ impl fmt::Display for Numeric {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Numeric::Single(v) => write!(f, "{v}"),
-            Numeric::Range(start, end) => write!(f, "{start}..{end}"),
+            Numeric::Range(start, end) => write!(f, "{start}{NUMERIC_RANGE_DELIM}{end}"),
         }
     }
 }

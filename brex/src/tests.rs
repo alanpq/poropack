@@ -7,6 +7,9 @@ mod roundtrip {
 
     fn roundtrip(input: &str) {
         for line in input.lines() {
+            if line.starts_with('#') {
+                continue;
+            }
             println!("== {line:?}");
             let encoded = encode(line).unwrap();
             println!("-> {encoded:?}");
