@@ -1,7 +1,7 @@
 use std::{
     collections::BTreeMap,
     fs::File,
-    io::{BufRead as _, BufReader, BufWriter, Read, Write, stdin, stdout},
+    io::{BufRead as _, BufReader, BufWriter, Write, stdout},
     path::PathBuf,
 };
 
@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand};
 use clap_stdin::FileOrStdin;
 use miette::IntoDiagnostic;
 
-use poro_hash::{Hasher, Hashtable, WadHasher, fst};
+use poro_hash::{Hashtable, WadHasher, fst};
 
 #[derive(Parser)]
 pub struct Cli {
