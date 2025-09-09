@@ -311,32 +311,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hashtool"
-version = "0.1.0"
-dependencies = [
- "bincode",
- "clap",
- "hashtools",
- "miette",
- "nom",
- "postcard",
- "serde",
- "serde_json",
-]
-
-[[package]]
-name = "hashtools"
-version = "0.1.0"
-dependencies = [
- "fnv_rs",
- "fst",
- "qp-trie",
- "serde",
- "trie-rs",
- "xxhash-rust",
-]
-
-[[package]]
 name = "heapless"
 version = "0.7.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -507,6 +481,32 @@ name = "paste"
 version = "1.0.15"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "57c0d7b74b563b49d38dae00a0c37d4d6de9b432382b2892f0574ddcae73fd0a"
+
+[[package]]
+name = "poro_hash"
+version = "0.1.0"
+dependencies = [
+ "fnv_rs",
+ "fst",
+ "qp-trie",
+ "serde",
+ "trie-rs",
+ "xxhash-rust",
+]
+
+[[package]]
+name = "poropack"
+version = "0.1.0"
+dependencies = [
+ "bincode",
+ "clap",
+ "miette",
+ "nom",
+ "poro_hash",
+ "postcard",
+ "serde",
+ "serde_json",
+]
 
 [[package]]
 name = "postcard"

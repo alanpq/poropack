@@ -8,7 +8,7 @@ use std::{
 use clap::{Parser, Subcommand};
 use miette::IntoDiagnostic;
 
-use hashtools::{Hasher, Hashtable, WadHasher, fst};
+use poro_hash::{Hasher, Hashtable, WadHasher, fst};
 
 #[derive(Parser)]
 pub struct Cli {
