@@ -1,3 +1,4 @@
+use itertools::Itertools;
 use nom::{
     Finish, IResult, Parser as _,
     bytes::complete::{is_not, tag, take_until, take_while1},
@@ -13,6 +14,17 @@ pub struct Brex<'a> {
     pub postamble: Option<&'a str>,
 }
 
+/// Sort function that has substrings > their superstring's
+/// (this is the opposite of normal str::cmp behaviour)
+///
+/// e.g "superfan" > "superfanvariant"
+fn inverted_substr_sort(a: &str, b: &str) -> std::cmp::Ordering {
+    let len = a.len().min(b.len());
+    match &a[..len].cmp(&b[..len]) {
+        std::cmp::Ordering::Equal => b.len().cmp(&a.len()),
+        order => *order,
+    }
+}
 impl<'a> Brex<'a> {
     pub fn empty(preamble: &'a str) -> Self {
         Self {
@@ -22,12 +34,12 @@ impl<'a> Brex<'a> {
         }
     }
     pub fn unroll(&self) -> String {
-        let mut groups = self
+        let groups = self
             .groups
             .iter()
+            .sorted_unstable_by(|a, b| inverted_substr_sort(a.prefix, b.prefix))
             .flat_map(|group| group.unroll())
             .collect::<Vec<_>>();
-        groups.sort_unstable();
         match self.postamble {
             Some(post) => format!("{}{}{post}", self.preamble, groups.join("")),
             None => format!("{}{}", self.preamble, groups.join("")),
@@ -45,6 +57,7 @@ impl<'a> Group<'a> {
     pub fn unroll(&self) -> impl Iterator<Item = String> {
         self.suffixes
             .iter()
+            //.sorted_by(|a, b| new_sort(a.suffix, b.suffix))
             .flat_map(|suffix| suffix.unroll())
             .map(|suffix| format!("{}{suffix}", self.prefix))
     }
@@ -76,6 +89,7 @@ impl<'a> Suffix<'a> {
                 .iter()
                 .flat_map(|numeric| numeric.start()..=numeric.end())
                 .map(|num| format!("{}{num}", self.suffix))
+                .sorted()
                 .collect(),
             None => vec![self.suffix.to_string()],
         }

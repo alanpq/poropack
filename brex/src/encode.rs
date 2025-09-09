@@ -33,27 +33,14 @@ impl fmt::Display for Brex<'_> {
         } = self;
         f.write_str(preamble)?;
 
-        if self.groups.is_empty() {
+        if groups.is_empty() {
             return Ok(());
         }
 
         f.write_char('<')?;
-
-        let mut groups = self.groups.clone();
-        fn new_sort(a: &str, b: &str) -> std::cmp::Ordering {
-            let len = a.len().min(b.len());
-            match &a[..len].cmp(&b[..len]) {
-                std::cmp::Ordering::Equal => a.len().cmp(&b.len()),
-                order => *order,
-            }
-        }
-        groups.sort_unstable_by(|a, b| new_sort(a.prefix, b.prefix));
-
         for Group { prefix, suffixes } in groups {
             f.write_str(prefix)?;
             f.write_char('{')?;
-            let mut suffixes = suffixes.clone();
-            suffixes.sort_unstable_by(|a, b| new_sort(a.suffix, b.suffix));
             for (i, Suffix { suffix, numerics }) in suffixes.iter().enumerate() {
                 f.write_str(suffix)?;
                 if let Some(numerics) = numerics {
