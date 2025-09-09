@@ -14,7 +14,7 @@ pub struct Brex<'a> {
 }
 
 impl<'a> Brex<'a> {
-    fn unroll(&self) -> String {
+    pub fn unroll(&self) -> String {
         let mut groups = self
             .groups
             .iter()
