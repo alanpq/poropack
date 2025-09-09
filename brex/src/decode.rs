@@ -47,6 +47,19 @@ pub struct Suffix<'a> {
 }
 
 impl<'a> Suffix<'a> {
+    pub fn simple(suffix: &'a str) -> Self {
+        Self {
+            suffix,
+            numerics: None,
+        }
+    }
+    pub fn numeric(suffix: &'a str, numerics: Vec<Numeric>) -> Self {
+        Self {
+            suffix,
+            numerics: Some(numerics),
+        }
+    }
+
     pub fn unroll(&self) -> Vec<String> {
         match &self.numerics {
             Some(numerics) => numerics
@@ -66,6 +79,9 @@ pub enum Numeric {
 }
 
 impl Numeric {
+    pub fn new(v: u32) -> Self {
+        Self::Single(v)
+    }
     pub fn start(&self) -> u32 {
         match self {
             Self::Single(start) | Self::Range(start, _) => *start,
@@ -74,6 +90,15 @@ impl Numeric {
     pub fn end(&self) -> u32 {
         match self {
             Self::Single(end) | Self::Range(_, end) => *end,
+        }
+    }
+
+    pub fn with_end(self, end: u32) -> Option<Self> {
+        match self {
+            Numeric::Single(start) | Numeric::Range(start, _) if end >= start => {
+                Some(Self::Range(start, end))
+            }
+            _ => None,
         }
     }
 }
