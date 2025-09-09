@@ -1,59 +1,28 @@
-mod decode;
-mod encode;
+//! Crate for encoding & decoding brex strings, an encoding dedicated to representing repetitive League of Legends game file names succinctly.
+#![deny(missing_docs)]
 
-pub use decode::*;
-pub use encode::*;
+mod decode;
+mod models;
+mod util;
+
+pub mod encode;
+pub mod parse;
+
+pub use models::*;
 
 #[cfg(test)]
 mod tests;
 
-#[derive(Clone, Debug)]
-pub struct SplitInclusiveStart<'a> {
-    remainder: &'a str,
-    delim: char,
+/// Encode text to a brex string.
+///
+/// This is a convenience wrapper around [`Brex::encode`], stringifying the resulting [`Brex`]
+pub fn encode(input: &str) -> Result<String, encode::Error> {
+    Ok(Brex::encode(input)?.to_string())
 }
 
-impl<'a> SplitInclusiveStart<'a> {
-    pub fn new(s: &'a str, delim: char) -> Self {
-        Self {
-            remainder: s,
-            delim,
-        }
-    }
-}
-
-impl<'a> Iterator for SplitInclusiveStart<'a> {
-    type Item = &'a str;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.remainder.is_empty() {
-            return None;
-        }
-
-        //eprintln!("remainder: {}", self.remainder);
-        if let Some(pos) = &self.remainder[self.delim.len_utf8()..].find(self.delim) {
-            let pos = *pos + 1;
-            //eprintln!("pos: {pos}");
-            if pos == 0 {
-                // remainder starts with delimiter
-                let len = self.delim.len_utf8();
-                let (piece, rest) = self.remainder.split_at(len);
-                self.remainder = rest;
-                Some(piece)
-            } else {
-                let (piece, rest) = self.remainder.split_at(pos);
-                self.remainder = rest; // rest starts with delimiter
-                Some(piece)
-            }
-        } else {
-            // no more delimiters
-            let piece = self.remainder;
-            self.remainder = "";
-            Some(piece)
-        }
-    }
-}
-
-pub fn split_inclusive_start<'a>(s: &'a str, delim: char) -> SplitInclusiveStart<'a> {
-    SplitInclusiveStart::new(s, delim)
+/// Parse and expand a brex string.
+///
+/// This is a convenience wrapper around [`Brex::parse()`] and [`Brex::expand()`]
+pub fn decode(encoded: &str) -> Result<String, parse::Error> {
+    Ok(Brex::parse(encoded)?.expand())
 }
