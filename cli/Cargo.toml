@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-poro_hash = { version = "0.1.0", path = "../hash" }
-brex = {version = "0.1.0", path = "../brex" }
+poro_hash = { path = "../hash" }
+brex = { path = "../brex" }
 
 bincode = { version = "2.0.1", features = ["serde"] }
 clap = { version = "4.5.47", features = ["derive"] }
