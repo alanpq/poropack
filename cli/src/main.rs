@@ -9,7 +9,7 @@ use clap::{Parser, Subcommand};
 use clap_stdin::FileOrStdin;
 use miette::IntoDiagnostic;
 
-use poro_hash::{Hashtable, WadHasher, fst};
+use poro_hash::{Hashtable, WadHash, fst};
 
 #[derive(Parser)]
 pub struct Cli {
@@ -88,10 +88,10 @@ fn main() -> miette::Result<()> {
                     let line = line.into_diagnostic()?;
                     let (hash, value) = line.split_once(' ').unwrap();
                     let hash = u64::from_str_radix(hash, 16).into_diagnostic()?;
-                    entries.insert(hash, value.trim().to_string());
+                    entries.insert(WadHash(hash), value.trim().to_string());
                 }
 
-                let table = Hashtable::<WadHasher>::from(entries);
+                let table = Hashtable::from(entries);
 
                 println!("Compressing {} entries...", table.hashes.len());
                 let trie: fst::Set<Vec<u8>> = table.into();
@@ -105,7 +105,7 @@ fn main() -> miette::Result<()> {
             HashCommand::Decompress { input, output } => {
                 println!("Decompressing {input:?}...");
                 let set = fst::Set::new(std::fs::read(&input).unwrap()).unwrap();
-                let table = Hashtable::<WadHasher>::try_from(set).into_diagnostic()?;
+                let table = Hashtable::<WadHash>::from_fst(set).into_diagnostic()?;
 
                 println!("table w/ {} entries decompressed.", table.hashes.len());
 
@@ -113,7 +113,7 @@ fn main() -> miette::Result<()> {
                 let mut entries = table.hashes.into_iter().collect::<Vec<_>>();
                 entries.sort_unstable_by(|a, b| a.1.cmp(&b.1));
                 for (hash, value) in entries {
-                    writeln!(output, "{hash:0>16x} {value}").into_diagnostic()?;
+                    writeln!(output, "{hash} {value}").into_diagnostic()?;
                 }
             }
         },

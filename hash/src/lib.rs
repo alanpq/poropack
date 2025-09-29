@@ -1,14 +1,18 @@
-use std::{collections::HashMap, io::BufRead, marker::PhantomData};
+use std::{
+    collections::HashMap,
+    fmt::{Debug, Display},
+    io::BufRead,
+    marker::PhantomData,
+};
 
 use derive_more as dm;
-pub use fst;
-pub use trie_rs as trie;
 
 pub trait Hash: std::hash::Hash + Ord {
     fn hash_str(str: impl AsRef<str>) -> Self;
 }
 
 #[derive(
+    Debug,
     Hash,
     PartialEq,
     Eq,
@@ -23,7 +27,15 @@ pub trait Hash: std::hash::Hash + Ord {
     dm::DerefMut,
 )]
 pub struct WadHash(pub u64);
+
+impl Display for WadHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:0>16x}", self.0)
+    }
+}
+
 #[derive(
+    Debug,
     Hash,
     PartialEq,
     Eq,
@@ -37,7 +49,13 @@ pub struct WadHash(pub u64);
     dm::Deref,
     dm::DerefMut,
 )]
-pub struct BinHash(pub u64);
+pub struct BinHash(pub u32);
+
+impl Display for BinHash {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:0>8x}", self.0)
+    }
+}
 
 pub struct Hashtable<H: Hash> {
     pub hashes: HashMap<H, String>,
@@ -51,16 +69,16 @@ impl<H: Hash> Hashtable<H> {
     }
 }
 
-impl<H: Hash> From<HashMap<H, String>> for Hashtable<H> {
-    fn from(value: HashMap<H, String>) -> Self {
+impl<H: Hash, T: IntoIterator<Item = (H, String)>> From<T> for Hashtable<H> {
+    fn from(values: T) -> Self {
         Self {
-            hashes: value,
+            hashes: values.into_iter().collect(),
             hasher: PhantomData,
         }
     }
 }
 
-#[cfg(feature = "fst")]
+#[cfg(feature = "trie")]
 pub type Trie = trie_rs::Trie<u8>;
 
 #[cfg(feature = "trie")]
@@ -75,29 +93,26 @@ mod trie_impl {
 }
 
 #[cfg(feature = "fst")]
+pub use fst;
+#[cfg(feature = "fst")]
 pub type Fst = fst::Set<Vec<u8>>;
 
 #[cfg(feature = "fst")]
 mod fst_impl {
     use crate::{Hash, Hashtable};
-    use std::marker::PhantomData;
 
-    impl<H: Hash> TryFrom<fst::Set<Vec<u8>>> for Hashtable<H> {
-        fn try_from(value: fst::Set<Vec<u8>>) -> Result<Self, Self::Error> {
-            Ok(Self {
-                hashes: value
-                    .into_fst()
-                    .stream()
-                    .into_str_keys()?
-                    .into_iter()
-                    .map(|v| (H::hash_str(&v), v))
-                    .collect(),
-                hasher: PhantomData,
-            })
+    impl<H: Hash> Hashtable<H> {
+        pub fn from_fst(fst: super::Fst) -> Result<Self, fst::Error> {
+            Ok(fst
+                .into_fst()
+                .stream()
+                .into_str_keys()?
+                .into_iter()
+                .map(|v| (H::hash_str(&v), v))
+                .into())
         }
-
-        type Error = fst::Error;
     }
+
     impl<H: Hash> From<Hashtable<H>> for fst::Set<Vec<u8>> {
         fn from(value: Hashtable<H>) -> Self {
             let mut values = value.hashes.into_values().collect::<Vec<_>>();
