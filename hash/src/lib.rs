@@ -39,9 +39,6 @@ pub struct WadHash(pub u64);
 )]
 pub struct BinHash(pub u64);
 
-pub struct WadHasher;
-pub struct BinHasher;
-
 pub struct Hashtable<H: Hash> {
     pub hashes: HashMap<H, String>,
     hasher: PhantomData<H>,
