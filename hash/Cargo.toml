@@ -3,10 +3,17 @@ name = "poro_hash"
 version = "0.1.0"
 edition = "2021"
 
+[features]
+default = ["fst"]
+fst = ["dep:fst"]
+trie = ["dep:trie-rs"]
+
 [dependencies]
-fnv_rs = "0.4.4"
-fst = "0.4.7"
-qp-trie = { version = "0.8.2", features = ["serde"] }
 serde = { version = "1.0.219", features = ["derive"] }
-trie-rs = { git = "https://github.com/alanpq/trie-rs", features = ["rayon", "serde"] }
+
+fst = {version = "0.4.7", optional = true }
+trie-rs = { version = "0.4.2", features = ["rayon", "serde"], optional = true }
+
+fnv_rs = "0.4.4"
 xxhash-rust = { version = "0.8.15", features = ["std", "xxh64"] }
+derive_more = { version = "2.0.1", features = ["as_ref", "deref", "deref_mut", "from"] }
