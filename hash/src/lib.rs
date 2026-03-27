@@ -117,6 +117,7 @@ mod trie_impl {
 use fnv_rs::FnvHasher;
 #[cfg(feature = "fst")]
 pub use fst;
+use ltk_hash::fnv1a;
 #[cfg(feature = "fst")]
 pub type Fst = fst::Set<Vec<u8>>;
 
@@ -157,11 +158,7 @@ impl Hash for WadHash {
 
 impl Hash for BinHash {
     fn hash_str(str: impl AsRef<str>) -> Self {
-        let hash = fnv_rs::Fnv32::hash(str.as_ref())
-            .as_bytes()
-            .try_into()
-            .expect("Fnv32 to return [u8; 4]");
-        Self(u32::from_be_bytes(hash))
+        Self(fnv1a::hash_lower(str.as_ref()))
     }
 }
 

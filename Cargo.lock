@@ -426,6 +426,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ltk_hash"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a0081deb694867c5ca11658f3df01425ae4181bdf5c6fbdc5fb1818fa0b52e5"
+
+[[package]]
 name = "memchr"
 version = "2.7.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -513,6 +519,7 @@ dependencies = [
  "derive_more",
  "fnv_rs",
  "fst",
+ "ltk_hash",
  "serde",
  "thiserror",
  "trie-rs",

@@ -18,3 +18,4 @@ fnv_rs = "0.4.4"
 xxhash-rust = { version = "0.8.15", features = ["std", "xxh64"] }
 derive_more = { version = "2.0.1", features = ["as_ref", "deref", "deref_mut", "from"] }
 thiserror = "2.0.17"
+ltk_hash = "0.2.5"
