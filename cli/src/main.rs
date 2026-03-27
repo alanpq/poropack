@@ -95,6 +95,9 @@ fn main() -> miette::Result<()> {
 
                 println!("Compressing {} entries...", table.hashes.len());
                 let trie: fst::Set<Vec<u8>> = table.into();
+                if let Some(parent) = output.parent() {
+                    std::fs::create_dir_all(parent).into_diagnostic()?;
+                }
                 let mut output = BufWriter::new(File::create(&output).into_diagnostic()?);
                 println!("Writing to {output:?}...");
 
