@@ -7,11 +7,12 @@ use std::{
 
 use derive_more as dm;
 
-pub trait Hash: std::hash::Hash + Ord {
+pub trait Hash: std::hash::Hash + Ord + Eq + FromStrRadix + Default {
     fn hash_str(str: impl AsRef<str>) -> Self;
 }
 
 #[derive(
+    Default,
     Debug,
     Hash,
     PartialEq,
@@ -35,6 +36,7 @@ impl Display for WadHash {
 }
 
 #[derive(
+    Default,
     Debug,
     Hash,
     PartialEq,
@@ -57,15 +59,35 @@ impl Display for BinHash {
     }
 }
 
+#[derive(Default, Clone, Debug)]
 pub struct Hashtable<H: Hash> {
     pub hashes: HashMap<H, String>,
     hasher: PhantomData<H>,
 }
 
+#[derive(thiserror::Error, Debug)]
+pub enum HashtableReadError {
+    #[error(transparent)]
+    Io(#[from] std::io::Error),
+    #[error("Could not decode hash - {0}")]
+    HashFromStr(#[from] std::num::ParseIntError),
+}
+
 impl<H: Hash> Hashtable<H> {
     /// Read from CommunityDragon/Data style hashtable files
-    pub fn read_hashtable_file<R: BufRead>(reader: &mut R) -> std::io::Result<Self> {
-        todo!()
+    pub fn read_hashtable_file<R: BufRead>(reader: &mut R) -> Result<Self, HashtableReadError> {
+        let mut table = Self::default();
+        for line in reader.lines() {
+            let line = line?;
+            let Some((hash, path)) = line.split_once(' ') else {
+                continue;
+            };
+
+            let hash = H::from_str_radix(hash, 16)?;
+            table.hashes.insert(hash, path.into());
+        }
+
+        Ok(table)
     }
 }
 
@@ -92,6 +114,7 @@ mod trie_impl {
     }
 }
 
+use fnv_rs::FnvHasher;
 #[cfg(feature = "fst")]
 pub use fst;
 #[cfg(feature = "fst")]
@@ -129,5 +152,30 @@ impl Hash for WadHash {
             str.as_ref().to_lowercase().as_bytes(),
             0,
         ))
+    }
+}
+
+impl Hash for BinHash {
+    fn hash_str(str: impl AsRef<str>) -> Self {
+        let hash = fnv_rs::Fnv32::hash(str.as_ref())
+            .as_bytes()
+            .try_into()
+            .expect("Fnv32 to return [u8; 4]");
+        Self(u32::from_be_bytes(hash))
+    }
+}
+
+pub trait FromStrRadix: Sized {
+    fn from_str_radix(src: &str, radix: u32) -> Result<Self, std::num::ParseIntError>;
+}
+
+impl FromStrRadix for WadHash {
+    fn from_str_radix(src: &str, radix: u32) -> Result<Self, std::num::ParseIntError> {
+        u64::from_str_radix(src, radix).map(|r| r.into())
+    }
+}
+impl FromStrRadix for BinHash {
+    fn from_str_radix(src: &str, radix: u32) -> Result<Self, std::num::ParseIntError> {
+        u32::from_str_radix(src, radix).map(|r| r.into())
     }
 }
