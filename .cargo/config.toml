@@ -1,0 +1,2 @@
+[patch.'https://github.com/LeagueToolkit/league-toolkit.git']
+ltk_hash = { path = "../league-toolkit/crates/ltk_hash" }
